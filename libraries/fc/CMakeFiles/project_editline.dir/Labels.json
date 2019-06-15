@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/CMakeFiles/project_editline"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/CMakeFiles/project_editline.rule"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/CMakeFiles/project_editline-complete.rule"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/editline/src/project_editline-stamp/project_editline-install.rule"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/editline/src/project_editline-stamp/project_editline-mkdir.rule"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/editline/src/project_editline-stamp/project_editline-download.rule"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/editline/src/project_editline-stamp/project_editline-update.rule"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/editline/src/project_editline-stamp/project_editline-patch.rule"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/editline/src/project_editline-stamp/project_editline-configure.rule"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/editline/src/project_editline-stamp/project_editline-build.rule"
+		},
+		{
+			"file" : "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/editline/src/project_editline-stamp/project_editline-autogen.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"project_editline"
+		],
+		"name" : "project_editline"
+	}
+}

@@ -1,0 +1,1 @@
+cmd='/home/citshares/work/citshares/safe_master/citshares-core/libraries/fc/vendor/editline/configure;--prefix=/home/citshares/work/citshares/safe_master/citshares-core/libraries/fc/vendor/editline'

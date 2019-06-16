@@ -1,1 +1,1 @@
-cmd='/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/secp256k1-zkp/configure;--prefix=/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/secp256k1-zkp;--with-bignum=no'
+cmd='/home/citshares/work/citshares/safe_master/citshares/libraries/fc/vendor/secp256k1-zkp/configure;--prefix=/home/citshares/work/citshares/safe_master/citshares/libraries/fc/vendor/secp256k1-zkp;--with-bignum=no'

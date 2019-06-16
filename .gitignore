@@ -1,6 +1,12 @@
 *.a
 *.sw*
 
+
+
+CMakeFiles
+Makefile
+*.cmake
+
 CMakeCache.txt
 compile_commands.json
 moc_*

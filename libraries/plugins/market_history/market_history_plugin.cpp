@@ -351,8 +351,14 @@ void market_history_plugin_impl::update_market_histories( const signed_block& b 
                db.modify( *ticker_itr, [&]( market_ticker_object& mt ) {
                   mt.last_day_base  = fill_price.base.amount;
                   mt.last_day_quote = fill_price.quote.amount;
-                  mt.base_volume    -= trade_price.base.amount.value;  // ignore underflow
-                  mt.quote_volume   -= trade_price.quote.amount.value; // ignore underflow
+                  if ((mt.base_volume < trade_price.base.amount.value) || (mt.quote_volume < trade_price.quote.amount.value))
+                  {
+                      mt.base_volume = 0;
+                      mt.quote_volume  = 0;
+                  }else{
+                      mt.base_volume    -= trade_price.base.amount.value;  // ignore underflow
+                      mt.quote_volume   -= trade_price.quote.amount.value; // ignore underflow
+                  }
                });
             }
          }

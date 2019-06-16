@@ -1,4 +1,4 @@
-# Install script for directory: /home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/websocketpp
+# Install script for directory: /home/citshares/work/citshares/safe_master/citshares/libraries/fc/vendor/websocketpp
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -42,14 +42,14 @@ if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "dev")
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
 file(INSTALL DESTINATION "/usr/local/lib/cmake/websocketpp" TYPE FILE FILES
-    "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/websocketpp/CMakeFiles/websocketpp-config.cmake"
-    "/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/websocketpp/CMakeFiles/websocketpp-configVersion.cmake"
+    "/home/citshares/work/citshares/safe_master/citshares/libraries/fc/vendor/websocketpp/CMakeFiles/websocketpp-config.cmake"
+    "/home/citshares/work/citshares/safe_master/citshares/libraries/fc/vendor/websocketpp/CMakeFiles/websocketpp-configVersion.cmake"
     )
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/citshares/work/citshares/save_develop/citshares/libraries/fc/vendor/websocketpp/websocketpp/cmake_install.cmake")
+  include("/home/citshares/work/citshares/safe_master/citshares/libraries/fc/vendor/websocketpp/websocketpp/cmake_install.cmake")
 
 endif()
 

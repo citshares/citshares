@@ -9,7 +9,7 @@
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
 
 /* Define this symbol if OpenSSL EC functions are available */
-#define ENABLE_OPENSSL_TESTS 1
+/* #undef ENABLE_OPENSSL_TESTS */
 
 /* Define this symbol if __builtin_clzll is available */
 #define HAVE_BUILTIN_CLZLL 1
@@ -22,9 +22,6 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
-
-/* Define this symbol if libcrypto is installed */
-#define HAVE_LIBCRYPTO 1
 
 /* Define this symbol if libgmp is installed */
 /* #undef HAVE_LIBGMP */
@@ -84,16 +81,16 @@
 #define STDC_HEADERS 1
 
 /* Define this symbol to enable x86_64 assembly optimizations */
-#define USE_ASM_X86_64 1
+/* #undef USE_ASM_X86_64 */
 
 /* Define this symbol to use endomorphism optimization */
 /* #undef USE_ENDOMORPHISM */
 
 /* Define this symbol to use the FIELD_10X26 implementation */
-/* #undef USE_FIELD_10X26 */
+#define USE_FIELD_10X26 1
 
 /* Define this symbol to use the FIELD_5X52 implementation */
-#define USE_FIELD_5X52 1
+/* #undef USE_FIELD_5X52 */
 
 /* Define this symbol to use the native field inverse implementation */
 #define USE_FIELD_INV_BUILTIN 1
@@ -108,10 +105,10 @@
 #define USE_NUM_NONE 1
 
 /* Define this symbol to use the 4x64 scalar implementation */
-#define USE_SCALAR_4X64 1
+/* #undef USE_SCALAR_4X64 */
 
 /* Define this symbol to use the 8x32 scalar implementation */
-/* #undef USE_SCALAR_8X32 */
+#define USE_SCALAR_8X32 1
 
 /* Define this symbol to use the native scalar inverse implementation */
 #define USE_SCALAR_INV_BUILTIN 1

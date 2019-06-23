@@ -54,40 +54,97 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
    const call_order_index& call_index = get_index_type<call_order_index>();
    const auto& call_price_index = call_index.indices().get<by_price>();
 
-   auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-   bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
 
    // cancel all call orders and accumulate it into collateral_gathered
    auto call_itr = call_price_index.lower_bound( price::min( bitasset.options.short_backing_asset, mia.id ) );
    auto call_end = call_price_index.upper_bound( price::max( bitasset.options.short_backing_asset, mia.id ) );
    asset pays;
+   int i = 0;
    while( call_itr != call_end )
    {
-      if( before_core_hardfork_342 )
+      printf("#### i=%d\r\n",i++);
+      if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) 
       {
-         pays = call_itr->get_debt() * settlement_price; // round down, in favor of call order
-
-         // Be here, the call order can be paying nothing
-         if( pays.amount == 0 && !bitasset.is_prediction_market ) // TODO remove this warning after hard fork core-342
-            wlog( "Something for nothing issue (#184, variant E) occurred at block #${block}", ("block",head_block_num()) );
+         ++call_itr;
+         printf("#### skip committee-account\r\n");
+         continue;
       }
-      else
+      if ( call_itr->get_collateral() * settlement_price > call_itr->get_debt())
+      {
+         ++call_itr;
+         printf("#### skip the enought account\r\n");
+         continue;
+      }
          pays = call_itr->get_debt().multiply_and_round_up( settlement_price ); // round up, in favor of global settlement fund
 
       if( pays > call_itr->get_collateral() )
          pays = call_itr->get_collateral();
 
-      collateral_gathered += pays;
       const auto&  order = *call_itr;
       ++call_itr;
-      FC_ASSERT( fill_call_order( order, pays, order.get_debt(), settlement_price, true ) ); // call order is maker
-   }
 
-   modify( bitasset, [&]( asset_bitasset_data_object& obj ){
-           assert( collateral_gathered.asset_id == settlement_price.quote.asset_id );
-           obj.settlement_price = mia.amount(original_mia_supply) / collateral_gathered; //settlement_price;
-           obj.settlement_fund  = collateral_gathered.amount;
-           });
+
+
+      // MOVE the call order to committee account
+      // Adjust the total core in orders accodingly
+      printf("#### modify the committee account stats\n"); 	   
+      modify(get_account_stats_by_owner(GRAPHENE_COMMITTEE_ACCOUNT), [&](account_statistics_object& stats) {
+         stats.total_core_in_orders += order.get_collateral().amount;
+      });
+
+      auto& sub_call_idx = get_index_type<call_order_index>().indices().get<by_account>();
+      auto sub_itr = sub_call_idx.find( boost::make_tuple(GRAPHENE_COMMITTEE_ACCOUNT, mia.id) );
+      const call_order_object* sub_call_obj = nullptr;
+      call_order_id_type sub_call_order_id;
+
+      optional<price> sub_old_collateralization;
+      optional<share_type> sub_old_debt;
+
+      if( sub_itr == sub_call_idx.end() ) // creating new debt position
+      {
+         printf("#### create committee account call order\n");
+         sub_call_obj = &create<call_order_object>( [&order, this]( call_order_object& call ){
+            call.borrower = GRAPHENE_COMMITTEE_ACCOUNT;
+            call.collateral = order.get_collateral().amount;
+            call.debt = order.get_debt().amount;
+            // set to the min GRAPHENE_MIN_COLLATERAL_RATIO
+            call.call_price = price::call_price(order.get_debt(), order.get_collateral(),  GRAPHENE_MIN_COLLATERAL_RATIO);
+            //call.target_collateral_ratio = o.extensions.value.target_collateral_ratio;
+         });
+         sub_call_order_id = sub_call_obj->id;
+   }
+      else // updating existing debt position
+      {
+         sub_call_obj = &*sub_itr;
+         auto sub_new_collateral = sub_call_obj->collateral + order.get_collateral().amount;
+         auto sub_new_debt = sub_call_obj->debt + order.get_debt().amount;
+         sub_call_order_id = sub_call_obj->id;
+         printf("#### update committee account call order\n");
+         if( sub_new_debt == 0 )
+         {
+            FC_ASSERT( sub_new_collateral == 0, "Should claim all collateral when closing debt position" );
+            remove( *sub_call_obj );
+            //return sub_call_order_id;
+         }
+
+         FC_ASSERT( sub_new_collateral > 0 && sub_new_debt > 0,
+            "Both collateral and debt should be positive after updated a debt position if not to close it" );
+
+         sub_old_collateralization = sub_call_obj->collateralization();
+         sub_old_debt = sub_call_obj->debt;
+
+         modify( *sub_call_obj, [sub_new_debt, sub_new_collateral,this]( call_order_object& call ){
+            call.collateral = sub_new_collateral;
+            call.debt = sub_new_debt;
+            call.call_price = price::call_price( call.get_debt(), call.get_collateral(), GRAPHENE_MIN_COLLATERAL_RATIO );
+            //call.target_collateral_ratio = o.extensions.value.target_collateral_ratio;
+            });
+      }
+
+      //clean the old call order
+      FC_ASSERT( fill_call_order( order, pays, order.get_debt(), settlement_price, true ) ); // call order is maker
+
+   }
 
    /// After all margin positions are closed, the current supply will be reported as 0, but
    /// that is a lie, the supply didn't change.   We need to capture the current supply before
@@ -466,6 +523,10 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
          {
             // assume hard fork core-343 and core-625 will take place at same time, always check call order with least call_price
             auto call_itr = call_price_idx.lower_bound( call_min );
+            if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) {
+                 printf("apply_order:  If the top is committee account, skip it\n");
+                 ++call_itr;
+            }
             if( call_itr == call_price_idx.end()
                   || call_itr->debt_type() != sell_asset_id
                   // feed protected https://github.com/cryptonomex/graphene/issues/436
@@ -976,6 +1037,11 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
            && limit_itr != limit_end )
     {
        bool  filled_call      = false;
+
+       if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) {
+           printf("check_call_orders:  If the top is committee account, skip it\n");
+           ++call_itr;
+       }
 
        const call_order_object& call_order = *call_itr;
 

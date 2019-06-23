@@ -185,7 +185,7 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
                                     const asset_bitasset_data_object* bitasset_ptr )
 {
     if( !mia.is_market_issued() ) return false;
-
+    printf("#### database: check_for_blackswan\n");
     const asset_bitasset_data_object& bitasset = ( bitasset_ptr ? *bitasset_ptr : mia.bitasset_data(*this) );
     if( bitasset.has_settlement() ) return true; // already force settled
     auto settle_price = bitasset.current_feed.settlement_price;
@@ -199,8 +199,16 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
     auto call_itr = call_price_index.lower_bound( call_min );
     auto call_end = call_price_index.upper_bound( call_max );
 
-    if( call_itr == call_end ) return false;  // no call orders
-
+    if (call_itr != call_end) {
+        if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) {
+            printf("If the top is committee account, skip it\n");
+            ++call_itr;
+        }
+    }
+    if( call_itr == call_end ) {
+        printf("#### check_for_blackswan: call_itr==call_end, return false\n");
+        return false;  // no call orders
+    }
     price highest = settle_price;
 
     const auto& dyn_prop = get_dynamic_global_properties();
@@ -243,11 +251,14 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
             ("h",highest.to_real())("~h",(~highest).to_real()) );
        edump((enable_black_swan));
        FC_ASSERT( enable_black_swan, "Black swan was detected during a margin update which is not allowed to trigger a blackswan" );
-       if( maint_time > HARDFORK_CORE_338_TIME && ~least_collateral <= settle_price )
+       if( maint_time > HARDFORK_CORE_338_TIME && ~least_collateral <= settle_price ) {
           // global settle at feed price if possible
+          printf("#### check_for_blackswan call globally_settle_asset  1\n ");
           globally_settle_asset(mia, settle_price );
-       else
+       }else{
+          printf("#### check_for_blackswan call globally_settle_asset  2\n ");
           globally_settle_asset(mia, ~least_collateral );
+       }
        return true;
     } 
     return false;

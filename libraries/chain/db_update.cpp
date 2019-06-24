@@ -198,21 +198,24 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
     auto call_max = price::max( bitasset.options.short_backing_asset, mia.id );
     auto call_itr = call_price_index.lower_bound( call_min );
     auto call_end = call_price_index.upper_bound( call_max );
-
-    if (call_itr != call_end) {
-        if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) {
-            printf("If the top is committee account, skip it\n");
-            ++call_itr;
-        }
-    }
-    if( call_itr == call_end ) {
-        printf("#### check_for_blackswan: call_itr==call_end, return false\n");
-        return false;  // no call orders
-    }
-    price highest = settle_price;
-
+   
     const auto& dyn_prop = get_dynamic_global_properties();
     auto maint_time = dyn_prop.next_maintenance_time;
+    bool before_core_hardfork_blackswan = ( maint_time <= HARDFORK_CHANGE_BLACKSWAN_TIME ); // better rounding
+
+    if ( ! before_core_hardfork_blackswan ) {
+        if (call_itr != call_end) {
+            if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) {
+                printf("If the top is committee account, skip it\n");
+                ++call_itr;
+            }
+        }
+    }
+    if( call_itr == call_end ) return false;  // no call orders
+    price highest = settle_price;
+
+    
+   
     if( maint_time > HARDFORK_CORE_338_TIME )
        // due to #338, we won't check for black swan on incoming limit order, so need to check with MSSP here
        highest = bitasset.current_feed.max_short_squeeze_price();
@@ -251,14 +254,11 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
             ("h",highest.to_real())("~h",(~highest).to_real()) );
        edump((enable_black_swan));
        FC_ASSERT( enable_black_swan, "Black swan was detected during a margin update which is not allowed to trigger a blackswan" );
-       if( maint_time > HARDFORK_CORE_338_TIME && ~least_collateral <= settle_price ) {
+       if( maint_time > HARDFORK_CORE_338_TIME && ~least_collateral <= settle_price )
           // global settle at feed price if possible
-          printf("#### check_for_blackswan call globally_settle_asset  1\n ");
           globally_settle_asset(mia, settle_price );
-       }else{
-          printf("#### check_for_blackswan call globally_settle_asset  2\n ");
+       else
           globally_settle_asset(mia, ~least_collateral );
-       }
        return true;
     } 
     return false;

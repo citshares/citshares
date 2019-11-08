@@ -1394,7 +1394,7 @@ order_book database_api::get_order_book( const string& base, const string& quote
 order_book database_api_impl::get_order_book( const string& base, const string& quote, unsigned limit )const
 {
    using boost::multiprecision::uint128_t;
-   FC_ASSERT( limit <= 50 );
+   //FC_ASSERT( limit <= 50 );
 
    order_book result;
    result.base = base;

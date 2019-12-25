@@ -61,22 +61,18 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
    auto call_itr = call_price_index.lower_bound( price::min( bitasset.options.short_backing_asset, mia.id ) );
    auto call_end = call_price_index.upper_bound( price::max( bitasset.options.short_backing_asset, mia.id ) );
    asset pays;
-   int i = 0;
    while( call_itr != call_end )
    {
       if ( ! before_core_hardfork_blackswan ) 
       {
-         printf("#### i=%d\r\n",i++);
          if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) 
          {
             ++call_itr;
-            printf("#### skip committee-account\r\n");
             continue;
          }
          if ( call_itr->get_collateral() * settlement_price > call_itr->get_debt())
          {
             ++call_itr;
-            printf("#### skip the enought account\r\n");
             continue;
          }
 
@@ -97,7 +93,6 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
       {
          // MOVE the call order to committee account
          // Adjust the total core in orders accodingly
-         printf("#### modify the committee account stats\n");   
          modify(get_account_stats_by_owner(GRAPHENE_COMMITTEE_ACCOUNT), [&](account_statistics_object& stats) {
             stats.total_core_in_orders += order.get_collateral().amount;
          });
@@ -112,7 +107,6 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
    
          if( sub_itr == sub_call_idx.end() ) // creating new debt position
          {
-            printf("#### create committee account call order\n");
             sub_call_obj = &create<call_order_object>( [&order, this]( call_order_object& call ){
                call.borrower = GRAPHENE_COMMITTEE_ACCOUNT;
                call.collateral = order.get_collateral().amount;
@@ -129,7 +123,6 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
             auto sub_new_collateral = sub_call_obj->collateral + order.get_collateral().amount;
             auto sub_new_debt = sub_call_obj->debt + order.get_debt().amount;
             sub_call_order_id = sub_call_obj->id;
-            printf("#### update committee account call order\n");
             if( sub_new_debt == 0 )
             {
                FC_ASSERT( sub_new_collateral == 0, "Should claim all collateral when closing debt position" );
@@ -547,7 +540,6 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
             auto call_itr = call_price_idx.lower_bound( call_min );
             if ( ! before_core_hardfork_blackswan ) {
                if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) {
-                  printf("apply_order:  If the top is committee account, skip it\n");
                   ++call_itr;
                }
             }
@@ -762,6 +754,8 @@ asset database::match( const call_order_object& call,
    asset call_pays       = call_receives * match_price; // round down here, in favor of call order, for first check
                                                         // TODO possible optimization: check need to round up or down first
 
+   
+
    // Be here, the call order may be paying nothing.
    bool cull_settle_order = false; // whether need to cancel dust settle order
    if( call_pays.amount == 0 )
@@ -964,6 +958,9 @@ bool database::fill_settle_order( const force_settlement_object& settle, const a
 
    auto issuer_fees = pay_market_fees(get(receives.asset_id), receives);
 
+
+
+
    if( pays < settle.balance )
    {
       modify(settle, [&pays](force_settlement_object& s) {
@@ -1067,7 +1064,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
 	   
        if ( ! before_core_hardfork_blackswan) {
            if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) {
-               printf("check_call_orders:  If the top is committee account, skip it\n");
                ++call_itr;
             }
        }

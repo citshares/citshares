@@ -185,7 +185,6 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
                                     const asset_bitasset_data_object* bitasset_ptr )
 {
     if( !mia.is_market_issued() ) return false;
-    printf("#### database: check_for_blackswan\n");
     const asset_bitasset_data_object& bitasset = ( bitasset_ptr ? *bitasset_ptr : mia.bitasset_data(*this) );
     if( bitasset.has_settlement() ) return true; // already force settled
     auto settle_price = bitasset.current_feed.settlement_price;
@@ -206,7 +205,6 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
     if ( ! before_core_hardfork_blackswan ) {
         if (call_itr != call_end) {
             if (call_itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) {
-                printf("If the top is committee account, skip it\n");
                 ++call_itr;
             }
         }
@@ -431,6 +429,13 @@ void database::clear_expired_orders()
                                                                            mia_object.get_id())));
             // There should always be a call order, since asset exists!
             assert(itr != call_index.end() && itr->debt_type() == mia_object.get_id());
+			// if the call order is belong to committee-account, skip it
+			if (maint_time > (fc::time_point_sec( 1575129600 ))) { //2019-12-1 0:0:0
+                if (itr->borrower == GRAPHENE_COMMITTEE_ACCOUNT) {
+                    ilog("Skip committee-account call order\r\n");
+					++itr;
+				}
+			}
             asset max_settlement = max_settlement_volume - settled;
 
             if( order.balance.amount == 0 )

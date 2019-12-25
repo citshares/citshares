@@ -247,9 +247,7 @@ void database::update_active_witnesses()
    const chain_property_object& cpo = get_chain_properties();
    const global_property_object& gpo = get_global_properties();
 
-   printf("witness_count before check %d\r\n", witness_count);
    witness_count = std::max( witness_count*2+1, (size_t)(cpo.immutable_parameters.min_witness_count + gpo.parameters.maximum_witness_count - GRAPHENE_DEFAULT_MAX_WITNESSES ));
-   printf("witness_count after check %d\r\n", witness_count);
 
    auto wits = sort_votable_objects<witness_index>( witness_count );
 

@@ -157,6 +157,8 @@ namespace graphene { namespace chain {
 
          const asset_object* asset_ptr = nullptr;
          const asset_bitasset_data_object* bitasset_ptr = nullptr;
+      private:
+         bool is_feeds_price_lower_lowest_threshold(const asset_publish_feed_operation& o);
 
    };
 

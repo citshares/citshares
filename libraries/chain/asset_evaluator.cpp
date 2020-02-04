@@ -908,6 +908,27 @@ operation_result asset_settle_evaluator::do_apply(const asset_settle_evaluator::
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 
+
+
+bool asset_publish_feeds_evaluator::is_feeds_price_lower_lowest_threshold(const asset_publish_feed_operation& o)
+{
+   database& d = db();
+   const auto& gpo = d.get_global_properties();
+   const auto& chain_params = gpo.parameters;
+
+    if (d.head_block_time() >=   (fc::time_point_sec( 1580719631 ))) {
+	   // maximum_asset_whitelist_authorities is FEN * 10,
+       // so the settlement_price.to_real()  should * 10000,  100 for change from yuan to fen, 10 for to_real bug, 10 for FEN * 10
+       if ((o.feed.settlement_price.to_real() * 10000) <= chain_params.maximum_asset_whitelist_authorities) {
+	   	    wlog( "settlement_price is ${s} FEN*10 , should be bigger then ${a} FEN*10", ("s",o.feed.settlement_price.to_real() * 10000)("a",chain_params.maximum_asset_whitelist_authorities) );
+	        return true;
+       }
+   }
+
+   return false;
+}
+
+
 void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_operation& o)
 { try {
    database& d = db();
@@ -958,6 +979,11 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    {
       FC_ASSERT( bitasset.feeds.count(o.publisher),
                  "The account is not in the set of allowed price feed producers of this asset" );
+   }
+
+   if (is_feeds_price_lower_lowest_threshold(o))
+   {
+      FC_ASSERT(false, "Do Not Update Feed Price,If You saw this in restart witness, please add --replay-blockchain");
    }
 
 
